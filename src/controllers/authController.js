@@ -9,22 +9,22 @@ export async function register(req, res) {
     // Verificar que no exista
     const existente = await getUserByEmail(email)
     if (existente) {
-      return res.status(409).JSON({ error: "El email ya esta registrado" })
+      return res.status(409).json({ error: "El email ya esta registrado" })
     }
     //  Hashear contraseña en caso de que no exista
     const passwordHash = await bcrypt.hash(password, 10)
 
     // Crear usuario
-    const user = await createUser({ email, passwordHash, name })
+    const user = await createUser(name, email, passwordHash)
 
     //   Generar el token de usuario
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     })
-    res.status(201).JSON({ user, token })
+    res.status(201).json({ user, token })
   } catch (error) {
     console.error(error)
-    res.status(500).JSON({ error: "Error al registrar usuario" })
+    res.status(500).json({ error: "Error al registrar usuario" })
   }
 }
 
@@ -34,9 +34,12 @@ export async function login(req, res) {
 
     const user = await getUserByEmail(email)
     if (!user) {
-      return res.status(401).JSON({ error: "Credenciales invalidas" })
+      return res.status(401).json({ error: "Credenciales invalidas" })
     }
-    const passwordValida = await bcrypt.compare(password, user.password_hash)
+    const passwordValida = await bcrypt.compare(password, user.password)
+    if (!passwordValida) {
+      return res.status(401).json({ error: "Credenciales Invalidas" })
+    }
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     })
@@ -45,6 +48,7 @@ export async function login(req, res) {
       token,
     })
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Error al Iniciar Sesion" })
   }
 }
