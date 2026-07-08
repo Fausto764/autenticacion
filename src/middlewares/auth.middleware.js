@@ -11,11 +11,10 @@ export async function authMiddleware(req, res, next) {
     //verificar existencia del header
     if (!authHeader){
         return res.status(401).json({message: 'Token no proporcionado'})
-
     }
-    const token = authHeader.split(' ')[1] // extraer el token
+    const token = authHeader.split(' ')[1] // divide la cadena en un array y usa el token
 
-    const payload = jwt.verify(token, JWT_SECRET) // verficar token
+    const payload = jwt.verify(token, JWT_SECRET) // verficar token y devuelve la informacion guardada dentro del token
 
     const user = await getUserById(payload.id) // buscar usuario
 
